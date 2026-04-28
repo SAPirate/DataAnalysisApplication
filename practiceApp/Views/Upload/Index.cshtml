@@ -1,0 +1,95 @@
+﻿@model practiceApp.Models.CombinedUploads
+
+@{
+    ViewData["Title"] = "Upload File";
+}
+
+<div class="container mt-5">
+    <h2>Upload a File</h2>
+
+    <!-- Upload Form -->
+    <form asp-action="Index" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label asp-for="UploadForm.File" class="form-label">Select File</label>
+            <input asp-for="UploadForm.File" class="form-control" type="file" />
+            <span asp-validation-for="UploadForm.File" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="UploadForm.SentToEmail" class="form-label">Send To Email</label>
+            <input asp-for="UploadForm.SentToEmail" class="form-control" />
+            <span asp-validation-for="UploadForm.SentToEmail" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success mt-3">@TempData["SuccessMessage"]</div>
+    }
+
+    <hr />
+
+    <!-- Search Form -->
+    <form method="get" asp-action="Index" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <input type="text" name="searchEmail" class="form-control" placeholder="Search by Email"
+                   value="@Model.UploadsList?.SearchEmail" />
+        </div>
+        <div class="col-md-3">
+            <input type="date" name="dateFrom" class="form-control"
+                   value="@Model.UploadsList?.DateFrom?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-3">
+            <input type="date" name="dateTo" class="form-control"
+                   value="@Model.UploadsList?.DateTo?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100">Search</button>
+        </div>
+    </form>
+
+    <h4>Uploaded Files</h4>
+
+    @if (Model.UploadsList?.DataUploads?.Any() == true)
+    {
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Type</th>
+                    <th>Sent To</th>
+                    <th>Uploaded At</th>
+                    <th>Uploaded By</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var file in Model.UploadsList.DataUploads)
+                {
+                    <tr>
+                        <td>@file.FileName</td>
+                        <td>@file.ContentType</td>
+                        <td>@file.SentToEmail</td>
+                        <td>@file.UploadedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@file.UploadedBy</td>
+                        <td>
+                            <a asp-action="Download" asp-route-id="@file.Id" class="btn btn-sm btn-success">Download</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No uploads found.</p>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

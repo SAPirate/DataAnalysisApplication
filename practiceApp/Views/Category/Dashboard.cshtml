@@ -1,0 +1,217 @@
+﻿@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+
+
+<style>
+    body {
+        background-color: #f4f6f9;
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .dashboard-container {
+        min-height: 100vh;
+        padding: 1rem;
+    }
+
+    .section-title {
+        font-size: 2.1rem;
+        font-weight: 600;
+        color: #343a40;
+        text-transform:uppercase;
+        margin-bottom: 2.5rem;
+        background-color:azure;
+        padding:15px 10px;
+    }
+
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease;
+        background-color: #fff;
+    }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+    .card-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .card-icon {
+        font-size: 1.25rem;
+        margin-right: 0.5rem;
+    }
+
+    .card-value {
+        font-size: 1.50rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .text-muted-sm {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    #categoryChart {
+        max-height: 180px;
+    }
+
+    /* Category-specific colors */
+    .card-total .card-title,
+    .card-total .card-icon {
+        color: #0d6efd; /* Primary */
+    }
+
+    .card-current .card-title,
+    .card-current .card-icon {
+        color: #198754; /* Success */
+    }
+
+    .card-deleted .card-title,
+    .card-deleted .card-icon {
+        color: #dc3545; /* Danger */
+    }
+
+    .card-restores .card-title,
+    .card-restores .card-icon {
+        color: #ffc107; /* Warning */
+    }
+
+    .card-user .card-title,
+    .card-user .card-icon {
+        color: #6c757d; /* Secondary */
+    }
+    
+</style>
+
+
+<div class="dashboard-container container-fluid">
+    <div class="text-center">
+        <h5 class="section-title"><i class="bi bi-speedometer2 me-2"></i>Category Summary Dashboard</h5>
+    </div>
+
+    <div class="row g-3">
+        <!-- Total Categories -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card p-3 card-total">
+                <div class="card-title"><i class="bi bi-list-ul card-icon"></i>Total Categories</div>
+                <div class="card-value">@Model.TotalCategories</div>
+            </div>
+        </div>
+
+        <!-- Current Categories -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card p-3 card-current">
+                <div class="card-title"><i class="bi bi-check-circle card-icon"></i>Current Categories</div>
+                <div class="card-value">@Model.CurrentCategories</div>
+            </div>
+        </div>
+
+        <!-- Deleted Categories -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card p-3 card-deleted">
+                <div class="card-title"><i class="bi bi-trash3 card-icon"></i>Deleted Categories</div>
+                <div class="card-value">@Model.DeletedCategories</div>
+            </div>
+        </div>
+
+        <!-- Total Restores -->
+        <div class="col-md-6 col-sm-6">
+            <div class="card p-3 card-restores">
+                <div class="card-title"><i class="bi bi-arrow-clockwise card-icon"></i>Total Restores</div>
+                <div class="card-value">@Model.TotalRestores</div>
+            </div>
+        </div>
+
+        <!-- Most Restored User -->
+        <div class="col-md-6 col-sm-12">
+            <div class="card p-3 card-user">
+                <div class="card-title"><i class="bi bi-person-badge card-icon"></i>Most Restored User</div>
+                <div class="card-value">@Model.MostRestoredUsername</div>
+                <div class="text-muted-sm">Restored @Model.MostRestoredCount times</div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="col-12">
+            <div class="card p-3">
+                <div class="card-title"><i class="bi bi-pie-chart card-icon"></i>Category Breakdown</div>
+                <canvas id="categoryChart" height="160"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Current', 'Deleted'],
+            datasets: [{
+                data: [@Model.CurrentCategories, @Model.DeletedCategories],
+                backgroundColor: ['#198754', '#dc3545'],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { size: 12 },
+                        boxWidth: 12
+                    }
+                }
+            }
+        }
+    });
+</script>
+<script>
+    const dashContent = document.querySelector('.dash-content');
+    const boxes = document.querySelectorAll('.box');
+    const totalBoxes = boxes.length;
+    let currentIndex = 0;
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function updateSlide() {
+        dashContent.style.transform = `translateX(-${currentIndex * 100}%)`;
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex === totalBoxes - 1;
+    }
+
+    nextBtn.addEventListener('click', () => {
+        if (currentIndex < totalBoxes - 1) {
+            currentIndex++;
+            updateSlide();
+        }
+    });
+
+    prevBtn.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateSlide();
+        }
+    });
+
+    updateSlide(); // Initial setup
+</script>

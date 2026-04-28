@@ -1,0 +1,103 @@
+﻿@model practiceApp.Models.CategoryIndexViewModel
+
+<div id="categoriesWrapper">
+    <h3 style="background-color: #e9f7ef; padding: 0.75rem 1.25rem; border-left: 4px solid #198754; border-radius: 4px; font-size: 1.2rem; font-weight: 600; color: #155724; margin-top: 2rem; display: inline-block;">
+        Current Categories
+    </h3>
+
+    <!-- SINGLE FORM wrapping checkboxes AND bulk buttons -->
+    <form method="post" asp-action="BulkAction" asp-controller="Category">
+        <div class="container-flex mb-3">
+            <!-- Bulk Action Buttons -->
+            <button type="submit" name="bulkAction" value="delete" class="btn btn-danger">Delete Selected</button>
+            <button type="submit" name="bulkAction" value="edit" class="btn btn-primary ms-2">Edit Selected</button>
+
+            <!-- Export buttons are OUTSIDE this form to avoid nesting -->
+        </div>
+
+        <table class="table table-bordered table-striped text-center" style="width:100%">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAll" /></th>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Display Order</th>
+                    <th>Status</th>
+                    <th>Restore Count</th>
+                    <th>Created Date</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model.ActiveCategories)
+                {
+                    var statusText = obj.IsDeleted ? "Deleted" : (obj.WasDeleted ? "Restored" : "Current");
+                    var statusClass = obj.IsDeleted ? "text-danger fw-bold" : obj.WasDeleted ? "text-success fw-bold" : "text-dark";
+
+                    <tr>
+                        <td><input type="checkbox" name="selectedIds" value="@obj.Id" class="rowCheckbox" /></td>
+                        <td>@obj.Id</td>
+                        <td>@obj.Username</td>
+                        <td>@obj.DisplayOrder</td>
+                        <td><span class="@statusClass">@statusText</span></td>
+                        <td>@obj.RestoreCount</td>
+                        <td>@obj.CreatedDateTime.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            <a asp-controller="Category" asp-action="Edit" asp-route-id="@obj.Id" class="btn btn-primary w-100">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </a>
+                        </td>
+                        <td>
+                            <a asp-controller="Category" asp-action="Delete" asp-route-id="@obj.Id" class="btn btn-danger w-100">
+                                <i class="bi bi-trash3"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link ajax-page-link" href="#" data-page="@i">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </form>
+
+    <!-- Export buttons OUTSIDE form -->
+    <div class="d-flex gap-2 mt-3">
+        <form method="post" asp-action="ExportToExcel" asp-controller="Category">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </button>
+        </form>
+
+        <form method="post" asp-action="ExportToPdf" asp-controller="Category">
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </button>
+        </form>
+    </div>
+
+    <style>
+        .container-flex {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+    </style>
+
+    <script>
+        // Select/Deselect all checkboxes
+        document.getElementById("selectAll")?.addEventListener("change", function () {
+            document.querySelectorAll(".rowCheckbox").forEach(cb => cb.checked = this.checked);
+        });
+    </script>
+</div>

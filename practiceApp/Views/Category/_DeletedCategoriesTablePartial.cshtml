@@ -1,0 +1,59 @@
+﻿@model practiceApp.Models.CategoryIndexViewModel
+
+@if (Model.DeletedCategories != null && Model.DeletedCategories.Any())
+{
+    <form asp-action="BulkRestore" asp-controller="Category" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-success mt-2">
+            <i class="bi bi-check-circle"></i> Restore Selected
+        </button>
+        <br />
+        <table id="deletedTable" class="table table-bordered table-striped text-center" style="width:100%">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAllDeleted" /></th>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Display Order</th>
+                    <th>Created Date</th>
+                    <th>Status</th>
+                    <th>Restore</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var deleted in Model.DeletedCategories)
+                {
+                    <tr>
+                        <td>
+                            <!-- NAME changed here -->
+                            <input type="checkbox" name="selectedIds" value="@deleted.Id" class="deletedCheckbox" />
+                        </td>
+                        <td>@deleted.Id</td>
+                        <td>@deleted.Username</td>
+                        <td>@deleted.DisplayOrder</td>
+                        <td>@deleted.CreatedDateTime.ToString("yyyy-MM-dd")</td>
+                        <td><span class="text-danger fw-bold">History</span></td>
+                        <td>
+                            <button type="button" class="btn btn-success w-100 restore-btn" data-id="@deleted.Id">
+                                <i class="bi bi-arrow-clockwise"></i> Restore
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- UNCOMMENTED submit button -->
+
+    </form>
+}
+else
+{
+    <p>No deleted categories to display.</p>
+}
+
+<script>
+    document.getElementById("selectAllDeleted")?.addEventListener("change", function () {
+        document.querySelectorAll(".deletedCheckbox").forEach(cb => cb.checked = this.checked);
+    });
+</script>

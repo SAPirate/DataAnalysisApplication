@@ -1,0 +1,43 @@
+﻿@model List<practiceApp.Models.CategoryModel>
+
+<h2>Bulk Edit Categories</h2>
+
+<form asp-action="BulkEdit" method="post">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Display Order</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr>
+                    <td>
+                        @Model[i].Id
+                        <input type="hidden" asp-for="@Model[i].Id" />
+                    </td>
+                    <td>
+                        <input asp-for="@Model[i].Username" class="form-control" />
+                        <span asp-validation-for="@Model[i].Username" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <input asp-for="@Model[i].DisplayOrder" class="form-control" type="number" min="1" max="100" />
+                        <span asp-validation-for="@Model[i].DisplayOrder" class="text-danger"></span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

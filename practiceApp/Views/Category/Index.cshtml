@@ -1,0 +1,137 @@
+﻿@model practiceApp.Models.CategoryIndexViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="container p-3">
+    <div class="row pt-4">
+        <div class="col-6">
+            <h2 style="background-color: #e7f1ff; padding: 0.75rem 1.25rem; border-left: 4px solid #0d6efd; border-radius: 4px; font-size: 1.5rem; font-weight: 600; color: #0d3b94; display: inline-block; margin-bottom: 1.5rem;">
+                Category List
+            </h2>
+        </div>
+        <div class="col-6 text-end">
+            <a asp-controller="Category" asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create New Category
+            </a>
+        </div>
+    </div>
+
+    <br />
+
+    <input type="text" id="searchBox" class="form-control" placeholder="Search by Username" autocomplete="off" />
+    <br />
+
+    <!-- Filter Form -->
+    <div class="row mb-3">
+        <form method="get" asp-action="Index">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label" for="sortOrder">Sort Order</label>
+                    <select name="sortOrder" id="sortOrder" class="form-select">
+                        <option value="">Sort by ID</option>
+                        <option value="asc">ID Ascending</option>
+                        <option value="desc">ID Descending</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label" for="statusFilter">Status</label>
+                    <select name="statusFilter" id="statusFilter" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="current">Current</option>
+                        <option value="restored">Restored</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label" for="startDate">From Date</label>
+                    <input type="date" name="startDate" id="startDate" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label" for="endDate">To Date</label>
+                    <input type="date" name="endDate" id="endDate" class="form-control" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label visually-hidden">Filter</label>
+                    <button type="submit" class="btn btn-secondary w-100">
+                        <i class="bi bi-filter-circle"></i> Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="categoriesWrapper">
+        @await Html.PartialAsync("_CategoryTablePartial", Model)
+    </div>
+</div>
+
+<!-- Your existing JS here -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Variables to track filters
+    let currentSearch = '';
+    let currentSortOrder = '';
+    let currentStatusFilter = '';
+    let currentStartDate = '';
+    let currentEndDate = '';
+
+    function attachCheckboxHandlers() {
+        $('#selectAll').off('change').on('change', function () {
+            $('.rowCheckbox').prop('checked', this.checked).trigger('change');
+        });
+
+        $('.rowCheckbox').off('change').on('change', function () {
+            // Optional: update selectAll checkbox state if needed
+            let allChecked = $('.rowCheckbox').length === $('.rowCheckbox:checked').length;
+            $('#selectAll').prop('checked', allChecked);
+        });
+    }
+
+    function loadCategories(page = 1) {
+        $.ajax({
+            url: '@Url.Action("Index", "Category")',
+            type: 'GET',
+            data: {
+                searchUsername: currentSearch,
+                sortOrder: currentSortOrder,
+                statusFilter: currentStatusFilter,
+                startDate: currentStartDate,
+                endDate: currentEndDate,
+                page: page
+            },
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function (result) {
+                $('#categoriesWrapper').html(result);
+                attachCheckboxHandlers();
+            },
+            error: function () {
+                alert('Error loading categories.');
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        attachCheckboxHandlers();
+
+        // Search input listener
+        $('#searchBox').on('input', function () {
+            currentSearch = $(this).val();
+            loadCategories(1); // reset to first page on search
+        });
+
+        // You can add listeners for sortOrder, statusFilter, etc similarly if you want
+
+        // Pagination links inside categoriesWrapper
+        $('#categoriesWrapper').on('click', '.pagination a.page-link', function (e) {
+            e.preventDefault();
+            var page = $(this).data('page') || 1;
+            loadCategories(page);
+        });
+    });
+</script>
+

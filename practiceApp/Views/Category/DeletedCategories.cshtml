@@ -1,0 +1,166 @@
+﻿@model practiceApp.Models.CategoryIndexViewModel
+
+
+    <div class="col-6">
+    <h2 style="
+    background-color: #fdecea; /* light red/pink background */
+    padding: 0.75rem 1.25rem;
+    border-left: 4px solid #dc3545; /* bootstrap danger red */
+    border-radius: 4px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #a71d2a; /* dark red text */
+    display: inline-block;
+    margin-bottom: 1.5rem;
+">
+        Deleted Category List
+    </h2>
+    
+
+    </div>
+
+<!-- Search Deleted Categories -->
+<input type="text" id="searchDeleted" class="form-control" placeholder="Search deleted usernames..." autocomplete="off" />
+<br />
+
+<!-- Filter Deleted Categories -->
+<form id="filterDeletedForm" class="row mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label" for="deletedSort">Sort</label>
+            <select name="deletedSort" id="deletedSort" class="form-select">
+                <option value="">Sort by ID</option>
+                <option value="asc">ID Ascending</option>
+                <option value="desc">ID Descending</option>
+            </select>
+        </div>
+
+        @* <div class="col-md-2"> *@
+        @*     <label class="form-label" for="deletedStatus">Status</label> *@
+        @*     <select name="deletedStatus" id="deletedStatus" class="form-select"> *@
+        @*         <option value="">All Statuses</option> *@
+        @*         <option value="restored">Restored</option> *@
+        @*     </select> *@
+        @* </div> *@
+
+        <div class="col-md-3">
+            <label class="form-label" for="deletedStart">From</label>
+            <input type="date" name="deletedStart" id="deletedStart" class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label" for="deletedEnd">To</label>
+            <input type="date" name="deletedEnd" id="deletedEnd" class="form-control" />
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label visually-hidden">Apply</label>
+            <button type="submit" class="btn btn-secondary w-100">
+                <i class="bi bi-filter-circle"></i> Filter
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Export Buttons for Deleted -->
+<div class="mb-3 d-flex gap-2 align-items-center">
+    <!-- Bulk Restore button (make sure this is inside the same form as your checkboxes) -->
+  
+
+    <!-- Inline form for Export to Excel -->
+    <form method="post" asp-action="ExportDeletedToExcel" asp-controller="Category" class="d-inline">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Export Deleted (Excel)
+        </button>
+    </form>
+
+    <!-- Inline form for Export to PDF -->
+    <form method="post" asp-action="ExportDeletedToPdf" asp-controller="Category" class="d-inline">
+        <button type="submit" class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf"></i> Export Deleted (PDF)
+        </button>
+    </form>
+</div>
+
+
+<!-- Container for the deleted categories table (loaded via partial AJAX) -->
+<div id="deletedTableContainer">
+    @await Html.PartialAsync("_DeletedCategoriesTablePartial", Model)
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Ensure jQuery is loaded -->
+
+    <script>
+        // Attach event handlers for checkboxes and restore buttons inside the deleted categories table
+        function attachDeletedTableHandlers() {
+            // Select all checkboxes toggle
+            document.getElementById("selectAllDeleted")?.addEventListener("change", function () {
+                document.querySelectorAll(".deletedCheckbox").forEach(cb => cb.checked = this.checked);
+            });
+
+            // Restore button AJAX handler
+            $('.restore-btn').off('click').on('click', function () {
+                const categoryId = $(this).data('id');
+                if (!confirm("Are you sure you want to restore this category?")) return;
+
+                $.ajax({
+                    url: '/Category/Restore',
+                    type: 'POST',
+                    data: {
+                        id: categoryId,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function () {
+                        loadFilteredDeletedCategories(); // Reload filtered table partial
+                    },
+                    error: function () {
+                        alert("Failed to restore category.");
+                    }
+                });
+            });
+        }
+
+        // Load filtered deleted categories via AJAX
+        function loadFilteredDeletedCategories() {
+            const query = {
+                search: $('#searchDeleted').val(),
+                sort: $('#deletedSort').val(),
+                status: $('#deletedStatus').val(),
+                startDate: $('#deletedStart').val(),
+                endDate: $('#deletedEnd').val()
+            };
+
+            $.ajax({
+                url: '/Category/GetDeletedFilteredPartial',
+                type: 'GET',
+                data: query,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (result) {
+                    $('#deletedTableContainer').html(result);
+                    attachDeletedTableHandlers(); // Reattach event handlers on new content
+                },
+                error: function () {
+                    alert('Failed to load filtered deleted categories.');
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            attachDeletedTableHandlers();
+
+            // Debounced search input event
+            let searchTimeout;
+            $('#searchDeleted').on('keyup', function () {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(loadFilteredDeletedCategories, 400);
+            });
+
+            // Filter form submission
+            $('#filterDeletedForm').on('submit', function (e) {
+                e.preventDefault();
+                loadFilteredDeletedCategories();
+            });
+        });
+    </script>
+}
