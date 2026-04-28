@@ -1,1 +1,1 @@
-A basic admin dashboard for category management, including CRUD operations, search, filtering, and deleted item recovery.
+Built a data analysis application for data processing, transformation, and reporting.
